@@ -1,15 +1,33 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QPushButton, QFileDialog, QLabel, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QPushButton, QFileDialog, QLabel, QVBoxLayout, QGraphicsView, QGraphicsScene
 import PyQt5.QtGui as qtg
 from fileparser import FileParser
 from clusteranalyzer import ClusterAnalyzer
+
+import pyqtPainter
 class PlagiarismDetectorGUI(QWidget):
     def __init__(self):
         super().__init__()
+
         self.initUI()
+
+
+
 
     def initUI(self):
         self.setWindowTitle('Plagiarism Detector')
+
+        # Erstelle QGraphicsView-Objekt
+        self.graphics_view = QGraphicsView()
+
+        # Erstelle Szene für das QGraphicsView-Objekt
+        self.scene = QGraphicsScene()
+        self.graphics_view.setScene(self.scene)
+
+        # Erstelle RainbowWidget-Objekt
+        self.rainbow_widget = pyqtPainter.RainbowWidget()
+        self.rainbow_widget.setGeometry(10, 10, 400, 400)
+        self.scene.addWidget(self.rainbow_widget)
 
         self.selectFileButton1 = QPushButton('Datei 1 auswählen', self)
         self.selectFileButton1.clicked.connect(self.getFile1)
@@ -36,6 +54,8 @@ class PlagiarismDetectorGUI(QWidget):
         self.resultLabelCount.setFont(qtg.QFont('Helvetica', 18))
 
         vbox = QVBoxLayout()
+        vbox.addWidget(self.graphics_view)
+
         vbox.addWidget(self.selectFileButton1)
         vbox.addWidget(self.fileLabel1)
         vbox.addWidget(self.selectFileButton2)
@@ -44,7 +64,10 @@ class PlagiarismDetectorGUI(QWidget):
         vbox.addWidget(self.resultLabelTfidf)
         vbox.addWidget(self.resultLabelCount)
 
+
         self.setLayout(vbox)
+
+        self.resize(600, 700)
         self.show()
 
     def getFile1(self):
