@@ -1,6 +1,9 @@
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.cluster import KMeans
+from sklearn.metrics.pairwise import cosine_similarity
+
 
 
 class ClusterAnalyzer:
@@ -11,45 +14,35 @@ class ClusterAnalyzer:
         self.vectorizer = TfidfVectorizer()
         self.kmeans = KMeans(n_clusters=self.n_clusters, n_init=self.n_init)
 
-    def vectorize(self, tokens):
-        tfidf_matrix = self.vectorizer.fit_transform(tokens)
+    def tfidf_vectorize(self, tokens1, tokens2):
+        tfidf_matrix = self.vectorizer.fit_transform([tokens1, tokens2])
         return tfidf_matrix
 
-    def cluster(self, vectorized_tokens):
-        self.kmeans.fit(vectorized_tokens)
-        clusters = self.kmeans.labels_
-        return clusters
+    def count_vectorize(self, tokens1, tokens2):
+        count_matrix = CountVectorizer().fit_transform([tokens1, tokens2])
+        return count_matrix
 
-    def create_contingency_matrix(self, clusters1, clusters2):
-        """Create contingency matrix between two cluster assignments"""
-
-        n_clusters = max(clusters1.max(), clusters2.max()) + 1
-
-        matrix = np.zeros((n_clusters, n_clusters))
-
-        for i in range(len(clusters1)):
-            matrix[clusters1[i], clusters2[i]] += 1
-
-        return matrix
+    def cluster_centers(self, matrix):
+        clusters = self.kmeans.fit(matrix)
+        centroids = clusters.cluster_centers_
+        return centroids
 
     def check_plagiarism(self, tokens1, tokens2):
-        vec_tokens1 = self.vectorize(tokens1)
-        vec_tokens2 = self.vectorize(tokens2)
+        sparse_matrix_tfidf = self.tfidf_vectorize(tokens1, tokens2)
+        sparse_matrix_count = self.count_vectorize(tokens1, tokens2)
 
-        clusters1 = self.cluster(vec_tokens1)
-        clusters2 = self.cluster(vec_tokens2)
+        centroids_tfidf = self.cluster_centers(sparse_matrix_tfidf)
+        centroids_count = self.cluster_centers(sparse_matrix_count)
 
-        score = self.calculate_score(clusters1, clusters2)
-        return score * 100
+        percent_tfidf = self.calculate_score(centroids_tfidf)
+        percent_count = self.calculate_score(centroids_count)
 
-    def calculate_score(self, clusters1, clusters2):
-        contingency_matrix = self.create_contingency_matrix(clusters1, clusters2)
+        scores = [percent_tfidf, percent_count]
+        return scores
 
-        num_matches = np.trace(contingency_matrix)
-        num_samples = np.sum(contingency_matrix)
+    def calculate_score(self, centroids):
+        similarity = cosine_similarity(centroids)
 
-        score = num_matches / num_samples
+        score = "%.2f" % (similarity[1][0] * 100)
 
         return score
-
-
