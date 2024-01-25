@@ -1,4 +1,5 @@
 import sys
+import os
 from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QPushButton, QFileDialog, QLabel, QVBoxLayout, QGraphicsView, QGraphicsScene
 import PyQt5.QtGui as qtg
 from fileparser import FileParser
@@ -74,13 +75,13 @@ class PlagiarismDetectorGUI(QWidget):
         self.file1, _ = QFileDialog.getOpenFileName(self, "Datei 1 auswählen")
         if self.file1:
             print(f"Ausgewählte Datei 1: {self.file1}")
-            self.fileLabel1.setText(f"{self.file1}")
+            self.fileLabel1.setText(f"{os.path.basename(self.file1)}")
 
     def getFile2(self):
         self.file2, _ = QFileDialog.getOpenFileName(self, "Datei 2 auswählen")
         if self.file2:
             print(f"Ausgewählte Datei 2: {self.file2}")
-            self.fileLabel2.setText(f"{self.file2}")
+            self.fileLabel2.setText(f"{os.path.basename(self.file2)}")
 
 
     def checkPlagiarism(self):
@@ -93,12 +94,14 @@ class PlagiarismDetectorGUI(QWidget):
         content2 = parser2.read_file()
 
         # Tokenisieren
-        #tokens1 = parser1.tokenize(content1)
-        #tokens2 = parser2.tokenize(content2)
+        tokens1 = parser1.tokenize(content1)
+        tokens2 = parser2.tokenize(content2)
 
         # Clusteranalyse
         analyzer = ClusterAnalyzer()
-        plagiarism_score = analyzer.check_plagiarism(content1, content2)
+        #plagiarism_score = analyzer.check_plagiarism(content1, content2)
+        plagiarism_score = analyzer.check_plagiarism(tokens1, tokens2)
+
 
         # Ergebnis anzeigen
         self.resultLabelTfidf.setText(f"Plagiatswahrscheinlichkeit Tfidf: {plagiarism_score[0]}%")

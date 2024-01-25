@@ -1,4 +1,5 @@
 import errno
+import re
 
 class FileParser:
 
@@ -9,6 +10,12 @@ class FileParser:
         try:
             with open(self.file_path, 'r') as f:
                 content = f.read()
+                # Entferne alle Kommentare
+                content = re.sub(r'%.*$', '', content, flags=re.MULTILINE)
+                # Entferne Variablennamen vor einem '='
+                content = re.sub(r'\b\w+(?=\s*=)', '', content)
+                # Entferne Zeilenumbrüche
+                content = re.sub(r'(\n)', '', content)
             print(f"Read: {self.file_path}")
             return content
         except IOError as e:
@@ -24,15 +31,21 @@ class FileParser:
         if content is None:
             return None
         try:
-            tokens = []
-            for token in content.split():
-                if token.isdigit():
-                    tokens.append(int(token))
-                else:
-                    tokens.append(token)
+            #tokens = []
+            #tokens = re.split(r'(\W+)', content)
+            # Teile Inhalt in Tokens auf, wobei alle Nicht-Wort-Zeichen und Zeilenumbrüche als Trennzeichen verwendet werden
+            tokens = re.split(r'(\W|\n)', content)
+            # Entferne alle leeren Strings und Strings, die nur aus Leerzeichen oder Zeilenumbrüchen bestehen
+            tokens = list(filter(lambda token: token.strip() and token != '\n', tokens))
+            tokens_string = ' '.join(tokens)
+            # for token in content.split():
+            #    if token.isdigit():
+            #        tokens.append(int(token))
+            #    else:
+            #        tokens.append(token)
             print(f"Tokenized")
-            return tokens
-        except:
-            print(f"Fehler beim Tokenisieren des Inhalts")
+            return tokens_string
+        except Exception as e:
+            print(f"Fehler beim Tokenisieren des Inhalts:{e}")
             return None
 
